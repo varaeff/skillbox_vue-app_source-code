@@ -21,7 +21,7 @@ export default [
     title: 'Floresan Серия "ANTIAGE"',
     price: 790,
     image: '/img/003.jpg',
-    color: '#73B6EA',
+    color: '#939393',
   },
   {
     id: 4,
@@ -29,7 +29,7 @@ export default [
     title: 'Стул Frankfurt экокожа желтый',
     price: 4490,
     image: '/img/004.jpg',
-    color: '#73B6EA',
+    color: '#8BE000',
   },
   {
     id: 5,
@@ -37,7 +37,7 @@ export default [
     title: 'Сокровища Израиля',
     price: 1690,
     image: '/img/005.jpg',
-    color: '#FFBE15',
+    color: '#FF6B00',
   },
   {
     id: 6,
@@ -45,7 +45,7 @@ export default [
     title: 'ORGANIC ALOE+COLLAGEN',
     price: 960,
     image: '/img/006.jpg',
-    color: '#73B6EA',
+    color: '#FFF',
   },
   {
     id: 7,
@@ -53,7 +53,7 @@ export default [
     title: 'Тональный крем',
     price: 900,
     image: '/img/007.jpg',
-    color: '#73B6EA',
+    color: '#222',
   },
   {
     id: 8,
@@ -61,7 +61,7 @@ export default [
     title: 'Афиша Москва на 14 июля',
     price: 900,
     image: '/img/008.jpg',
-    color: '#73B6EA',
+    color: '#FF6B00',
   },
   {
     id: 9,
@@ -69,7 +69,7 @@ export default [
     title: 'Windows 10 Корпоративная 2016',
     price: 4990,
     image: '/img/009.jpeg',
-    color: '#73B6EA',
+    color: '#8BE000',
   },
   {
     id: 10,
@@ -77,7 +77,7 @@ export default [
     title: 'Роллерсёрф Razor RipStik Air Pro',
     price: 6690,
     image: '/img/ripstik.jpg',
-    color: '#FFF',
+    color: '#939393',
   },
   {
     id: 11,
@@ -85,7 +85,7 @@ export default [
     title: 'Наушники AirPods',
     price: 16560,
     image: '/img/airpods.jpg',
-    color: '#FFF',
+    color: '#FFBE15',
   },
   {
     id: 12,
@@ -93,6 +93,6 @@ export default [
     title: 'Наушники Sony',
     price: 30690,
     image: '/img/headphones.jpg',
-    color: '#FFF',
+    color: '#73B6EA',
   },
 ];
