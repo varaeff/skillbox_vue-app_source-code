@@ -1,5 +1,6 @@
 <template>
-  <main class="content container">
+  <main class="loader" v-if="$store.state.cartLoading"></main>
+  <main class="content container" v-else>
     <div class="content__top">
       <ul class="breadcrumbs">
         <li class="breadcrumbs__item">
@@ -60,3 +61,7 @@ export default {
   components: { CartItem },
 };
 </script>
+
+<style lang="scss">
+  @import '@/assets/css/preloader.css';
+</style>

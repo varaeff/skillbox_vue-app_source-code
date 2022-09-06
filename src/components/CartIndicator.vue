@@ -1,5 +1,6 @@
 <template>
-  <router-link class="header__cart" aria-label="Корзина с товарами" :to="{name: 'cart'}">
+  <div style="color: white" v-if="$store.state.cartLoading">LOADING...</div>
+  <router-link class="header__cart" aria-label="Корзина с товарами" :to="{name: 'cart'}" v-else>
     <svg width="30" height="21" fill="currentColor">
       <use xlink:href="#icon-cart"></use>
     </svg>

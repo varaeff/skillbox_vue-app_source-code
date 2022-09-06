@@ -1,5 +1,10 @@
 <template>
-  <main class="content container">
+  <main class="loader" v-if="productLoading"></main>
+  <main v-else-if="!productData">
+    Произошла ошибка при загрузке товара.
+    <button @click.prevent="loadProduct">Попробовать ещё раз</button>
+  </main>
+  <main class="content container" v-else>
     <div class="content__top">
       <ul class="breadcrumbs">
         <li class="breadcrumbs__item">
@@ -23,7 +28,7 @@
     <section class="item">
       <div class="item__pics pics">
         <div class="pics__wrapper">
-          <img width="570" height="570" :src="product.image" :alt="product.title">
+          <img width="570" height="570" :src="product.image.file.url" :alt="product.title">
         </div>
       </div>
 
@@ -41,28 +46,13 @@
             <fieldset class="form__block">
               <legend class="form__legend">Цвет:</legend>
               <ul class="colors">
-                <li class="colors__item">
-                  <label for="blue" class="colors__label">
-                    <input id="blue" class="colors__radio sr-only" type="radio" name="color-item"
-                      value="blue" checked="">
-                    <span class="colors__value" style="background-color: #73B6EA;">
+                <li class="colors__item" v-for="color in this.colors" :key="color">
+                  <label :for="color" class="colors__label">
+                    <input :id="color" class="colors__radio sr-only" type="radio" name="color-item"
+                      :value="color" checked="">
+                    <span class="colors__value" :style="{ 'background-color': color }">
                     </span>
                   </label>
-                </li>
-                <li class="colors__item">
-                  <label for="yellow" class="colors__label">
-                    <input id="yellow" class="colors__radio sr-only" type="radio" name="color-item"
-                      value="yellow">
-                    <span class="colors__value" style="background-color: #FFBE15;">
-                    </span>
-                  </label>
-                </li>
-                <li class="colors__item">
-                  <label for="gray" class="colors__label">
-                    <input id="gray" class="colors__radio sr-only" type="radio" name="color-item"
-                      value="gray">
-                    <span class="colors__value" style="background-color: #939393;">
-                  </span></label>
                 </li>
               </ul>
             </fieldset>
@@ -120,10 +110,13 @@
                 </button>
               </div>
 
-              <button class="button button--primery" type="submit">
+              <button class="button button--primery" type="submit" :disabled="productAddSending">
                 В корзину
               </button>
             </div>
+
+            <div v-show="productAdded">Товар добавлен в корзину</div>
+            <div v-show="productAddSending">Добавляем товар в корзину...</div>
           </form>
         </div>
       </div>
@@ -198,31 +191,46 @@
 </template>
 
 <script>
-import categories from '@/data/categories';
-import products from '@/data/products';
 import numberFormat from '@/helpers/numberFormat';
+import API_BASE_URL from '@/config';
+import axios from 'axios';
+import { mapActions } from 'vuex';
 
 export default {
   data() {
     return {
       productAmount: 1,
+      productData: null,
+      productLoading: false,
+
+      productAdded: false,
+      productAddSending: false,
     };
   },
   computed: {
     product() {
-      return products.find((product) => product.id === +this.$route.params.id);
+      return this.productData;
     },
     category() {
-      return categories.find((category) => category.id === this.product.categoryId);
+      return this.productData.category;
     },
     numberFormat,
+    colors() {
+      return this.product.colors.map((color) => color.code);
+    },
   },
   methods: {
+    ...mapActions(['addProductToCart']),
+
     addToCart() {
-      this.$store.commit(
-        'addProductToCart',
-        { productId: this.product.id, amount: this.productAmount },
-      );
+      this.productAdded = false;
+      this.productAddSending = true;
+
+      this.addProductToCart({ productId: this.product.id, amount: this.productAmount })
+        .then(() => {
+          this.productAdded = true;
+          this.productAddSending = false;
+        });
     },
     addProduct() {
       this.productAmount += 1;
@@ -230,6 +238,27 @@ export default {
     removeProduct() {
       if (this.productAmount > 1) this.productAmount -= 1;
     },
+    loadProduct() {
+      this.productLoading = true;
+      clearTimeout(this.loadProductsTimer);
+      if (this.$route.params.id) {
+        this.loadProductsTimer = setTimeout(() => {
+          (axios
+            .get(`${API_BASE_URL}/api/products/${this.$route.params.id}`)
+            .then((response) => { this.productData = response.data; })
+            .then(this.productLoading = false)
+          );
+        }, 500);
+      }
+    },
+  },
+  created() {
+    this.$watch('$route.params.id', () => { this.loadProduct(); });
+    this.loadProduct();
   },
 };
 </script>
+
+<style lang="scss">
+  @import '@/assets/css/preloader.css';
+</style>
