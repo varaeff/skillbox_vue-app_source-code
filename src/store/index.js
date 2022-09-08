@@ -73,7 +73,7 @@ const store = createStore({
           },
         })
         .then((response) => {
-          if (context.state.userAccessKey) {
+          if (context.state.userAccessKey === null) {
             localStorage.setItem('userAccessKey', response.data.user.accessKey);
             context.commit('updateUserAccessKey', response.data.user.accessKey);
           }

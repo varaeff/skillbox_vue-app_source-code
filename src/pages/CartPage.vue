@@ -39,9 +39,10 @@
             Итого: <span>{{ numberFormat(totalPrice) }} ₽</span>
           </p>
 
-          <button class="cart__button button button--primery" type="submit">
+          <router-link :to="{name: 'order'}" v-show="totalAmount > 0"
+            class="cart__button button button--primery" type="submit">
             Оформить заказ
-          </button>
+          </router-link>
         </div>
       </form>
     </section>
