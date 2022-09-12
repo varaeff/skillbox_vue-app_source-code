@@ -1,5 +1,6 @@
 <template>
-  <main class="content container">
+  <div class="loader" v-if="productsOrdering"></div>
+  <main class="content container" v-else>
     <div class="content__top">
       <ul class="breadcrumbs">
         <li class="breadcrumbs__item">
@@ -28,7 +29,7 @@
     </div>
 
     <section class="cart">
-      <form class="cart__form form" action="#" method="POST">
+      <form class="cart__form form" action="#" method="POST" @submit.prevent="order">
         <div class="cart__field">
           <div class="cart__data">
             <BaseFormText v-model="formData.name" :error="formError.name" title="ФИО"
@@ -43,8 +44,8 @@
             <BaseFormText v-model="formData.email" :error="formError.email" title="Email"
               placeholder="Введи ваш Email" type="email"/>
 
-            <BaseFromTextarea v-model="formData.comments" title="Комментарий к заказу"
-              :error="formError.comments" placeholder="Ваши пожелания" />
+            <BaseFromTextarea v-model="formData.comment" title="Комментарий к заказу"
+              :error="formError.comment" placeholder="Ваши пожелания" />
           </div>
 
           <div class="cart__options">
@@ -94,29 +95,13 @@
           </div>
         </div>
 
-        <div class="cart__block">
-          <ul class="cart__orders">
-            <li v-for="item in products" :key="item.productId" class="cart__order">
-              <h3>{{ item.product.title }}, {{ item.amount }} ед.</h3>
-              <b>{{ numberFormat(item.product.price * item.amount) }} ₽</b>
-              <span>Артикул: {{ item.productId }}</span>
-            </li>
-          </ul>
+        <CartBlock :products="products" :totalAmount="totalAmount"
+          :totalPrice="totalPrice" :button="true"/>
 
-          <div class="cart__total">
-            <p>Доставка: <b>500 ₽</b></p>
-            <p>Итого товаров: <b>{{ totalAmount }}</b> на сумму
-              <b>{{ numberFormat(totalPrice) }} ₽</b></p>
-          </div>
-
-          <button class="cart__button button button--primery" type="submit">
-            Оформить заказ
-          </button>
-        </div>
-        <div class="cart__error form__error-block" style="display: none">
+        <div class="cart__error form__error-block" v-if="formErrorMessage">
           <h4>Заявка не отправлена!</h4>
           <p>
-            Похоже произошла ошибка. Попробуйте отправить снова или перезагрузите страницу.
+            {{ formErrorMessage }}
           </p>
         </div>
       </form>
@@ -129,18 +114,57 @@ import numberFormat from '@/helpers/numberFormat';
 import { mapGetters } from 'vuex';
 import BaseFormText from '@/components/BaseFormText.vue';
 import BaseFromTextarea from '@/components/BaseFromTextarea.vue';
+import axios from 'axios';
+import API_BASE_URL from '@/config';
+import CartBlock from '@/components/CartBlock.vue';
 
 export default {
   data() {
     return {
       formData: {},
       formError: {},
+      formErrorMessage: '',
+
+      productsOrdering: false,
     };
+  },
+  methods: {
+    order() {
+      this.formError = {};
+      this.formErrorMessage = '';
+      this.productsOrdering = true;
+      clearTimeout(this.orderTimer);
+      this.orderTimer = setTimeout(() => {
+        (axios
+          .post(`${API_BASE_URL}/api/orders`, {
+            ...this.formData,
+          }, {
+            params: {
+              userAccessKey: this.$store.state.userAccessKey,
+            },
+          })
+          .then((response) => {
+            this.$store.commit('resetCart');
+            this.$store.commit('updateOrderInfo', response.data);
+            this.$router.push({ name: 'orderInfo', params: { id: response.data.id } });
+          })
+          .catch((error) => {
+            this.formError = error.response.data.error.request || {};
+            this.formErrorMessage = error.response.data.error.message;
+          })
+          .then(this.productsOrdering = false)
+        );
+      }, 500);
+    },
   },
   computed: {
     ...mapGetters({ products: 'cartDetailProducts', totalPrice: 'cartTotalPrice', totalAmount: 'cartTotalAmount' }),
     numberFormat,
   },
-  components: { BaseFormText, BaseFromTextarea },
+  components: { BaseFormText, BaseFromTextarea, CartBlock },
 };
 </script>
+
+<style lang="scss">
+  @import '@/assets/css/preloader.css';
+</style>
