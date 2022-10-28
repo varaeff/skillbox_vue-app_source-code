@@ -1,6 +1,6 @@
 import { createStore } from 'vuex';
 import axios from 'axios';
-import API_BASE_URL from '@/config';
+import { API_BASE_URL } from '@/config';
 
 const store = createStore({
   state: {
@@ -13,6 +13,8 @@ const store = createStore({
     cartLoading: false,
 
     orderInfo: null,
+
+    categoryId: 0,
   },
   mutations: {
     updateOrderInfo(state, orderInfo) {
@@ -40,6 +42,9 @@ const store = createStore({
     },
     updatecartProductsData(state, items) {
       state.cartProductsData = items;
+    },
+    updateCategoryId(state, id) {
+      state.categoryId = id;
     },
     syncCartProducts(state) {
       state.cartProducts = state.cartProductsData.map((item) => (
@@ -97,6 +102,9 @@ const store = createStore({
         .then((response) => {
           context.commit('updateOrderInfo', response.data);
         });
+    },
+    updateCategory(context, id) {
+      context.commit('updateCategoryId', id);
     },
     loadCart(context) {
       context.commit('updateCartLoading', true);

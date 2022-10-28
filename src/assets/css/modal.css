@@ -1,0 +1,50 @@
+.teleport-blackout {
+    z-index: 100;
+    position: absolute;
+    top: 0px;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, .75);
+}
+
+.teleport-modal__container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    overflow: auto;
+    text-align: center;
+}
+
+.teleport-modal__container:before {
+    content: '';
+    display: inline-block;
+    height: 100%;
+    vertical-align: middle;
+}
+
+.teleport-modal {
+    z-index: 1010;
+    overflow: auto;
+    width: fit-content;
+    height: fit-content;
+    display: inline-block;
+    vertical-align: middle;
+    text-align: left;
+}
+
+.teleport-modal__content {
+    position: relative;
+    max-width: 1000px;
+    padding: 40px;
+    background-color: #fff;
+}
+
+.teleport-modal__close {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 5px;
+    line-height: 1;
+}

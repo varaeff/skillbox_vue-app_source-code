@@ -115,7 +115,7 @@ import { mapGetters } from 'vuex';
 import BaseFormText from '@/components/BaseFormText.vue';
 import BaseFromTextarea from '@/components/BaseFromTextarea.vue';
 import axios from 'axios';
-import API_BASE_URL from '@/config';
+import { API_BASE_URL } from '@/config';
 import CartBlock from '@/components/CartBlock.vue';
 
 export default {
@@ -154,7 +154,7 @@ export default {
           })
           .then(this.productsOrdering = false)
         );
-      }, 500);
+      }, 0);
     },
   },
   computed: {

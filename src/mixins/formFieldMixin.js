@@ -8,8 +8,8 @@ export default {
       get() {
         return this.modelValue;
       },
-      set(name) {
-        this.$emit('update:modelValue', name);
+      set(modelValue) {
+        this.$emit('update:modelValue', modelValue);
       },
     },
   },

@@ -30,13 +30,13 @@
         </label>
       </fieldset>
 
-      <fieldset class="form__block">
+      <fieldset class="form__block" v-show="colors.length && categoryId">
         <legend class="form__legend">Цвет</legend>
         <ul class="colors">
           <li class="colors__item" v-for="color in colors" :key="color.id">
             <label :for="color.id" class="colors__label">
-              <input :id="color.id" class="colors__radio sr-only" type="radio" name="color"
-                :value="color.id" v-model="currentColor">
+              <input :id="color.id" class="colors__radio sr-only" type="checkbox" name="color"
+                :value="color.id" v-model="currentColors">
               <span class="colors__value" :style="{ 'background-color': color.code }">
               </span>
             </label>
@@ -44,76 +44,15 @@
         </ul>
       </fieldset>
 
-      <fieldset class="form__block">
-        <legend class="form__legend">Объемб в ГБ</legend>
-        <ul class="check-list">
-          <li class="check-list__item">
-            <label for="8gb" class="check-list__label">
-              <input id="8gb" class="check-list__check sr-only" type="checkbox" name="volume"
-                value="8" checked="">
-              <span class="check-list__desc">
-                8
-                <span>(313)</span>
-              </span>
-            </label>
-          </li>
-          <li class="check-list__item">
-            <label for="16gb" class="check-list__label">
-              <input id="16gb" class="check-list__check sr-only" type="checkbox" name="volume"
-                value="16">
-              <span class="check-list__desc">
-                16
-                <span>(461)</span>
-              </span>
-            </label>
-          </li>
-          <li class="check-list__item">
-            <label for="32gb" class="check-list__label">
-              <input id="32gb" class="check-list__check sr-only" type="checkbox" name="volume"
-                value="32">
-              <span class="check-list__desc">
-                32
-                <span>(313)</span>
-              </span>
-            </label>
-          </li>
-          <li class="check-list__item">
-            <label for="64gb" class="check-list__label">
-              <input id="64gb" class="check-list__check sr-only" type="checkbox" name="volume"
-                value="64">
-              <span class="check-list__desc">
-                64
-                <span>(313)</span>
-              </span>
-            </label>
-          </li>
-          <li class="check-list__item">
-            <label for="128gb" class="check-list__label">
-              <input id="128gb" class="check-list__check sr-only" type="checkbox" name="volume"
-                value="128">
-              <span class="check-list__desc">
-                128
-                <span>(313)</span>
-              </span>
-            </label>
-          </li>
-          <li class="check-list__item">
-            <label for="264gb" class="check-list__label">
-              <input id="264gb" class="check-list__check sr-only" type="checkbox" name="volume"
-                value="264">
-              <span class="check-list__desc">
-                264
-                <span>(313)</span>
-              </span>
-            </label>
-          </li>
-        </ul>
+      <fieldset class="form__block" v-for="prop in currentCategoryProps" :key="prop.id">
+        <CheckBoxBlock :item="prop" v-model:checked-props="currentProps[prop.id]"/>
       </fieldset>
 
       <button class="filter__submit button button--primery" type="submit">
         Применить
       </button>
-      <button class="filter__reset button button--second" type="button" @click.prevent="reset">
+      <button v-show="filtered" class="filter__reset button button--second" type="button"
+        @click.prevent="reset">
         Сбросить
       </button>
     </form>
@@ -121,70 +60,135 @@
 </template>
 
 <script>
+import { useStore } from 'vuex';
 import axios from 'axios';
-import API_BASE_URL from '@/config';
+import { API_DIPLOMA_URL } from '@/config';
+import {
+  defineComponent, ref, computed, watch, reactive,
+} from 'vue';
+import CheckBoxBlock from './CheckBoxBlock.vue';
 
-export default {
-  data() {
+export default defineComponent({
+  props: ['priceFrom', 'priceTo', 'categoryId', 'startColor', 'loadProps', 'availableColors'],
+  setup(props, { emit: $emit }) {
+    const $store = useStore();
+    const currentPriceFrom = ref(0);
+    const currentPriceTo = ref(0);
+    const currentcategoryId = ref(0);
+    const currentColors = ref([]);
+    const currentProps = ref([]);
+    let tempProps = reactive({});
+
+    const categoriesData = ref(null);
+    const loadCategories = () => {
+      axios.get(`${API_DIPLOMA_URL}/api/productCategories`)
+        .then((response) => { categoriesData.value = response.data; });
+    };
+    const categories = computed(() => (categoriesData.value ? categoriesData.value.items : []));
+    const currentCategoryProps = ref([]);
+    const LoadCategoryProps = () => {
+      axios.get(`${API_DIPLOMA_URL}/api/productCategories/${currentcategoryId.value}`)
+        .then((response) => {
+          if (response.data.productProps) {
+            currentCategoryProps.value = response.data.productProps;
+          }
+        });
+    };
+
+    const filterColors = ref(null);
+    const loadColors = () => {
+      axios.get(`${API_DIPLOMA_URL}/api/colors`)
+        .then((response) => { filterColors.value = response.data; });
+    };
+    const colors = computed(() => (
+      filterColors.value ? filterColors.value.items.filter(
+        (item) => props.availableColors.includes(item.id),
+      ) : []
+    ));
+
+    const exportProps = computed(() => {
+      const output = {};
+      if (currentProps.value) {
+        currentProps.value.forEach((value, index) => {
+          let categoryProp = '';
+          currentCategoryProps.value.forEach((val) => {
+            if (val.id === index) {
+              categoryProp = val.code;
+            }
+          });
+          output[categoryProp] = value;
+        });
+      }
+      return output;
+    });
+
+    const filtered = ref($store.state.categoryId !== 0);
+
+    const submit = () => {
+      $emit('update:priceFrom', currentPriceFrom.value);
+      $emit('update:priceTo', currentPriceTo.value);
+      $emit('update:categoryId', currentcategoryId.value);
+      $emit('update:startColor', currentColors.value);
+      $emit('update:loadProps', {});
+      $emit('update:loadProps', tempProps);
+      if (currentPriceFrom.value
+        || currentPriceTo.value
+        || currentcategoryId.value) {
+        filtered.value = true;
+      }
+    };
+    const reset = () => {
+      $emit('update:priceFrom', 0);
+      $emit('update:priceTo', 0);
+      $emit('update:categoryId', 0);
+      $emit('update:startColor', []);
+      $emit('update:loadProps', {});
+      filtered.value = false;
+      currentCategoryProps.value = [];
+      currentProps.value = [];
+      $store.dispatch('updateCategory', 0);
+    };
+    watch(() => props.priceFrom, (value) => {
+      currentPriceFrom.value = value;
+    }, { immediate: true });
+    watch(() => props.priceTo, (value) => {
+      currentPriceTo.value = value;
+    }, { immediate: true });
+    watch(() => props.categoryId, (value) => {
+      currentcategoryId.value = value;
+    }, { immediate: true });
+    watch(() => props.startColor, (value) => {
+      currentColors.value = value;
+    }, { immediate: true });
+    watch(() => currentcategoryId.value, (value) => {
+      currentProps.value = [];
+      if (value !== 0) {
+        LoadCategoryProps();
+      }
+    }, { immediate: true });
+    watch(() => exportProps.value, (value) => {
+      tempProps = value;
+    }, { immediate: true });
+
+    loadCategories();
+    loadColors();
+
     return {
-      currentPriceFrom: 0,
-      currentPriceTo: 0,
-      currentcategoryId: 0,
+      currentPriceFrom,
+      currentPriceTo,
+      currentcategoryId,
+      currentColors,
+      currentProps,
+      currentCategoryProps,
 
-      currentColor: '',
+      categories,
+      colors,
+      filtered,
 
-      categoriesData: null,
-      filterColors: null,
+      submit,
+      reset,
     };
   },
-  props: ['priceFrom', 'priceTo', 'categoryId', 'startColor'],
-  computed: {
-    categories() {
-      return this.categoriesData ? this.categoriesData.items : [];
-    },
-    colors() {
-      return this.filterColors ? this.filterColors.items : [];
-    },
-  },
-  watch: {
-    priceFrom(value) {
-      this.currentPriceFrom = value;
-    },
-    priceTo(value) {
-      this.currentPriceTo = value;
-    },
-    categoryId(value) {
-      this.currentcategoryId = value;
-    },
-    startColor(value) {
-      this.currentColor = value;
-    },
-  },
-  methods: {
-    submit() {
-      this.$emit('update:priceFrom', this.currentPriceFrom);
-      this.$emit('update:priceTo', this.currentPriceTo);
-      this.$emit('update:categoryId', this.currentcategoryId);
-      this.$emit('update:startColor', this.currentColor);
-    },
-    reset() {
-      this.$emit('update:priceFrom', 0);
-      this.$emit('update:priceTo', 0);
-      this.$emit('update:categoryId', 0);
-      this.$emit('update:startColor', '');
-    },
-    loadCategories() {
-      axios.get(`${API_BASE_URL}/api/productCategories`)
-        .then((response) => { this.categoriesData = response.data; });
-    },
-    loadColors() {
-      axios.get(`${API_BASE_URL}/api/colors`)
-        .then((response) => { this.filterColors = response.data; });
-    },
-  },
-  created() {
-    this.loadCategories();
-    this.loadColors();
-  },
-};
+  components: { CheckBoxBlock },
+});
 </script>

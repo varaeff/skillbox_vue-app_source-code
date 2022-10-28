@@ -39,9 +39,9 @@
             Итого: <span>{{ numberFormat(totalPrice) }} ₽</span>
           </p>
 
-          <router-link :to="{name: 'order'}" v-show="totalAmount > 0"
-            class="cart__button button button--primery" type="submit">
-            Оформить заказ
+          <router-link v-slot="{navigate}" :to="{name: 'order'}" custom>
+            <button v-show="totalAmount > 0" class="cart__button button button--primery"
+              type="button" @click="navigate">Оформить заказ</button>
           </router-link>
         </div>
       </form>
@@ -53,14 +53,15 @@
 import numberFormat from '@/helpers/numberFormat';
 import { mapGetters } from 'vuex';
 import CartItem from '@/components/CartItem.vue';
+import { defineComponent } from 'vue';
 
-export default {
+export default defineComponent({
   computed: {
     ...mapGetters({ products: 'cartDetailProducts', totalPrice: 'cartTotalPrice', totalAmount: 'cartTotalAmount' }),
     numberFormat,
   },
   components: { CartItem },
-};
+});
 </script>
 
 <style lang="scss">
